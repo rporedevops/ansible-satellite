@@ -1,0 +1,146 @@
+- name: Install Satellite
+  hosts: satellite_servers
+  collections:
+  - ansible.posix
+  - redhat.satellite_operations
+  - redhat.satellite
+  - community.general
+  vars:
+
+  tasks:
+  - name: Disable all RHSM repositories
+    rhsm_repository:
+      name: '*'
+      state: disabled
+
+  - name: Enable a RHSM repositories for RHEL 7 system
+    rhsm_repository:
+      name: 
+        - rhel-7-server-rpms
+        - rhel-7-server-satellite-6.9-rpms
+        - rhel-7-server-satellite-maintenance-6-rpms 
+        - rhel-server-rhscl-7-rpms 
+        - rhel-7-server-ansible-2.9-rpms
+      state: enabled
+    when: 
+      - ansible_distribution_major_version == '7'
+
+  - name: Enable a RHSM repositories for RHEL 8 system
+    rhsm_repository:
+      name: 
+        - rhel-8-for-x86_64-baseos-rpms
+        - rhel-8-for-x86_64-appstream-rpms
+        - satellite-6.12-for-rhel-8-x86_64-rpms
+        - satellite-maintenance-6.12-for-rhel-8-x86_64-rpms 
+      state: enabled
+    when: 
+      - ansible_distribution_major_version == '8'
+
+  - name: Install updated RPMs
+    ansible.builtin.yum:
+      name:
+        - '*'
+      state: latest
+      disable_gpg_check: false
+
+  - name: Install Satellite RPMs for RHEL 7 system
+    ansible.builtin.yum:
+      name:
+        - satellite
+        - satellite-installer
+      state: latest
+      disable_gpg_check: false
+    when: 
+      - ansible_distribution_major_version == '7'
+
+  - name: Install Satellite RPMs RHEL 8 system
+    block:
+    - name: Enable Satellite Module
+      ansible.builtin.command: dnf module enable -y satellite:el8
+
+    - name: Install Satellite RPMs
+      ansible.builtin.dnf:
+        name:
+          - satellite
+          - satellite-installer
+        state: latest
+        disable_gpg_check: false
+    when: 
+      - ansible_distribution_major_version == '8'
+
+  - name: Allow port 80/tcp
+    ansible.posix.firewalld:
+      zone: public
+      port: 80/tcp
+      permanent: yes
+      state: enabled
+
+  - name: Allow port 443/tcp
+    ansible.posix.firewalld:
+      zone: public
+      port: 443/tcp
+      permanent: yes
+      state: enabled
+
+  - name: Allow port 8000/tcp
+    ansible.posix.firewalld:
+      zone: public
+      port: 8000/tcp
+      permanent: yes
+      state: enabled
+
+  - name: Allow port 9090/tcp
+    ansible.posix.firewalld:
+      zone: public
+      port: 9090/tcp
+      permanent: yes
+      state: enabled
+
+  - name: Allow port 5000/tcp
+    ansible.posix.firewalld:
+      zone: public
+      port: 5000/tcp
+      permanent: yes
+      state: enabled
+
+  - name: Allow port 5647/tcp
+    ansible.posix.firewalld:
+      zone: public
+      port: 5647/tcp
+      permanent: yes
+      state: enabled
+
+  - name: Allow port 8140/tcp
+    ansible.posix.firewalld:
+      zone: public
+      port: 8140/tcp
+      permanent: yes
+      state: enabled
+
+  - name: Allow port 53/tcp
+    ansible.posix.firewalld:
+      zone: public
+      port: 53/tcp
+      permanent: yes
+      state: enabled
+
+  - name: Allow port 53/udp
+    ansible.posix.firewalld:
+      zone: public
+      port: 53/udp
+      permanent: yes
+      state: enabled
+
+  - name: Allow port 67/udp
+    ansible.posix.firewalld:
+      zone: public
+      port: 67/udp
+      permanent: yes
+      state: enabled
+
+  - name: Allow port 69/udp
+    ansible.posix.firewalld:
+      zone: public
+      port: 69/udp
+      permanent: yes
+      state: enabled

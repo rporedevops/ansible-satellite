@@ -1,0 +1,7 @@
+---
+
+collections:
+  - name: community.general 
+  #- name: satellite-operations-collection
+  - name: redhat.satellite_operations
+  - name: redhat.satellite

@@ -1,0 +1,75 @@
+---
+
+- name: Import and Create Content - Red Hat Enterprise Linux 7 Server
+  gather_facts: no
+  hosts: satellite_servers
+  vars:
+    content_view: RHEL
+    product: "Red Hat Enterprise Linux Server"
+    repo: "Red Hat Enterprise Linux 7 Server (RPMs)"
+    repo_variants:
+      - releasever: "7Server"
+        basearch: "x86_64"
+    organization: "Default Organization"
+    admin_acct: admin
+    admin_pass: changeme
+    server_url: "https://satellite.local"
+  tasks:
+    - name: "Enable RHEL 7 RPMs repositories"
+      redhat.satellite.repository_set:
+        username: "admin"
+        password: "changeme"
+        server_url: "https://satellite.local"
+        name: "Red Hat Enterprise Linux 7 Server (RPMs)"
+        organization: "Default Organization"
+        product: "Red Hat Enterprise Linux Server"
+        repositories:
+        - releasever: "7.0"
+          basearch: "x86_64"
+        - releasever: "7.1"
+          basearch: "x86_64"
+        - releasever: "7.2"
+          basearch: "x86_64"
+        - releasever: "7.3"
+          basearch: "x86_64"
+        state: enabled
+
+    - name: "Enable {{ repo }} repository"
+      redhat.satellite.repository_set:
+        username: "{{ admin_acct }}"
+        password: "{{ admin_pass }}"
+        server_url: "{{ server_url }}"
+        name: "{{ repo }}"
+        product: "{{ product }}"
+        repositories: "{{ repo_variants }}"
+        organization: "{{ organization }}"
+        state: enabled
+    
+    - name: "Sync {{ repo }} repository"
+      redhat.satellite.repository_sync:
+        username: "{{ admin_acct }}"
+        password: "{{ admin_pass }}"
+        server_url: "{{ server_url }}"
+        repository: "{{ repo }}"
+        product: "{{ product }}"
+        organization: "{{ organization }}"
+    
+    - name: "Create RHEL ContentView"
+      redhat.satellite.content_view:
+        username: "{{ admin_acct }}"
+        password: "{{ admin_pass }}"
+        server_url: "{{ server_url }}"
+        name: "{{ content_view }}"
+        repositories:
+          - name: "{{ repo }}"
+            product: "{{ product }}"
+        organization: "{{ organization }}"
+        state: present
+    
+    - name: "Publish RHEL content view"
+      redhat.satellite.content_view_version:
+        username: "{{ admin_acct }}"
+        password: "{{ admin_pass }}"
+        server_url: "{{ server_url }}"
+        content_view: "{{ content_view }}"
+        organization: "{{ organization }}"
